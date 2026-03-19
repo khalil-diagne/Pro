@@ -1,0 +1,175 @@
+
+-- Création et sélection de la base de données
+CREATE DATABASE IF NOT EXISTS site_actualite
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+USE site_actualite;
+
+-- ============================================================
+-- TABLE : categories
+-- ============================================================
+CREATE TABLE IF NOT EXISTS categories (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nom         VARCHAR(100) NOT NULL UNIQUE,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- TABLE : utilisateurs
+-- ============================================================
+CREATE TABLE IF NOT EXISTS utilisateurs (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nom         VARCHAR(100) NOT NULL,
+    prenom      VARCHAR(100) NOT NULL,
+    login       VARCHAR(100) NOT NULL UNIQUE,
+    mot_de_passe VARCHAR(255) NOT NULL,          -- stocké en bcrypt
+    role        ENUM('visiteur','editeur','administrateur') NOT NULL DEFAULT 'visiteur',
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- TABLE : articles
+-- ============================================================
+CREATE TABLE IF NOT EXISTS articles (
+    id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    titre               VARCHAR(255) NOT NULL,
+    description_courte  TEXT NOT NULL,
+    contenu             LONGTEXT NOT NULL,
+    date_publication    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id_categorie        INT UNSIGNED NOT NULL,
+    id_auteur           INT UNSIGNED NOT NULL,
+    CONSTRAINT fk_article_categorie
+        FOREIGN KEY (id_categorie) REFERENCES categories(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_article_auteur
+        FOREIGN KEY (id_auteur) REFERENCES utilisateurs(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- DONNÉES INITIALES : catégories
+-- ============================================================
+INSERT INTO categories (nom) VALUES
+    ('Technologie'),
+    ('Sport'),
+    ('Politique'),
+    ('Éducation'),
+    ('Culture');
+
+-- ============================================================
+-- DONNÉES INITIALES : utilisateurs
+-- Mots de passe en clair (pour info) :
+--   admin123  → administrateur
+--   editeur123 → editeur1
+--   editeur456 → editeur2
+-- IMPORTANT : les hachages ci-dessous sont générés avec password_hash() PHP
+-- Regénérez-les avec : echo password_hash('votre_mdp', PASSWORD_DEFAULT);
+-- ============================================================
+INSERT INTO utilisateurs (nom, prenom, login, mot_de_passe, role) VALUES
+(
+    'Diallo',
+    'Mamadou',
+    'admin',
+    '$2y$12$eImiTXuWVxfM37uY4JANjQe5zKSzwKCKfTRlsHpJ3FwFEAtyMz6Oa', -- admin123
+    'administrateur'
+),
+(
+    'Sow',
+    'Fatou',
+    'editeur1',
+    '$2y$12$Xy8kL2mNpQrStUvWxYzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', -- editeur123
+    'editeur'
+),
+(
+    'Ndiaye',
+    'Ousmane',
+    'editeur2',
+    '$2y$12$AbCdEfGhIjKlMnOpQrStUvWxYzABCDEFGHIJKLMNOPQRSTUVWXYZ01', -- editeur456
+    'editeur'
+);
+
+-- ============================================================
+-- DONNÉES INITIALES : articles (10 articles de test)
+-- ============================================================
+INSERT INTO articles (titre, description_courte, contenu, date_publication, id_categorie, id_auteur) VALUES
+
+-- Technologie
+(
+    'L\'intelligence artificielle révolutionne l\'industrie',
+    'Les systèmes d\'IA transforment profondément le monde du travail et de la production à l\'échelle mondiale.',
+    'L\'intelligence artificielle (IA) s\'impose désormais comme l\'une des technologies les plus transformatrices de notre époque. Des secteurs aussi variés que la santé, la finance, l\'agriculture et l\'industrie manufacturière voient leurs pratiques bouleversées par l\'intégration d\'algorithmes capables d\'apprendre, de s\'adapter et de prendre des décisions complexes.\n\nDans le domaine médical, des outils d\'IA permettent désormais de détecter certains cancers avec une précision supérieure à celle des spécialistes humains. En agriculture, des drones intelligents analysent les cultures en temps réel pour optimiser l\'irrigation et la fertilisation. Ces avancées soulèvent cependant des questions éthiques fondamentales sur l\'emploi et la responsabilité algorithmique.',
+    '2026-03-10 09:00:00', 1, 2
+),
+(
+    'La 5G arrive enfin dans les zones rurales',
+    'Après les grandes villes, le réseau de cinquième génération s\'étend progressivement vers les campagnes.',
+    'Le déploiement de la 5G dans les zones rurales représente une avancée majeure pour réduire la fracture numérique. Longtemps réservée aux grandes métropoles, cette technologie de communication ultra-rapide atteint désormais des villages reculés, ouvrant de nouvelles perspectives économiques et sociales.\n\nLes agriculteurs peuvent désormais utiliser des capteurs connectés pour surveiller leurs troupeaux ou leurs cultures à distance. Les télétravailleurs installés loin des centres urbains bénéficient enfin de connexions comparables à celles des bureaux en ville. Les opérateurs prévoient une couverture nationale complète d\'ici fin 2027.',
+    '2026-03-12 10:30:00', 1, 3
+),
+
+-- Sport
+(
+    'CAN 2026 : Le Sénégal qualifié pour les demi-finales',
+    'Les Lions de la Teranga ont dominé leur quart de finale avec une victoire convaincante.',
+    'Le Sénégal a validé son ticket pour les demi-finales de la Coupe d\'Afrique des Nations 2026 après une prestation remarquable. L\'équipe nationale, emmenée par un milieu de terrain en grande forme, a su faire la différence en seconde période grâce à deux buts rapides.\n\nLe sélectionneur a salué l\'état d\'esprit de son groupe et la solidité défensive affichée tout au long du tournoi. Le prochain adversaire sera connu à l\'issue des autres quarts de finale. L\'ensemble du pays retient son souffle et espère voir les Lions soulever le trophée continental pour la deuxième fois de leur histoire.',
+    '2026-03-14 18:00:00', 2, 2
+),
+(
+    'Lutte sénégalaise : Balla Gaye 2 revient en force',
+    'Le fils de Double Less a remporté un combat spectaculaire devant un public en délire.',
+    'L\'arène nationale a vibré au rythme d\'un combat de lutte mémorable. Balla Gaye 2, considéré comme l\'un des lutteurs les plus populaires du Sénégal, a offert une démonstration technique impressionnante pour s\'imposer face à son adversaire du soir.\n\nLe champion a montré une condition physique retrouvée après plusieurs mois de préparation intensive. Les amateurs de lutte avec frappe ont apprécié l\'intensité du duel et les nombreux échanges spectaculaires. La prochaine affiche est déjà très attendue.',
+    '2026-03-15 20:00:00', 2, 3
+),
+
+-- Politique
+(
+    'Conseil des ministres : nouvelles mesures économiques adoptées',
+    'Le gouvernement a annoncé un ensemble de mesures visant à soutenir les PME et l\'emploi des jeunes.',
+    'À l\'issue du conseil des ministres tenu en début de semaine, le porte-parole du gouvernement a présenté une série de décisions économiques importantes. Parmi les mesures phares, on retient la création d\'un fonds de garantie destiné aux petites et moyennes entreprises, ainsi qu\'un programme de formation professionnelle ciblant les jeunes sans emploi.\n\nCes initiatives s\'inscrivent dans le cadre du plan de développement national à horizon 2030. Les syndicats d\'employeurs ont globalement accueilli ces annonces favorablement, tout en appelant à une mise en œuvre rapide et transparente des dispositifs annoncés.',
+    '2026-03-11 08:00:00', 3, 2
+),
+(
+    'Élections locales : la campagne électorale bat son plein',
+    'Les candidats multiplient les meetings et les promesses à quelques semaines du scrutin municipal.',
+    'À l\'approche des élections locales, les formations politiques intensifient leurs efforts de mobilisation sur le terrain. Les grandes villes comme Dakar, Thiès et Ziguinchor accueillent des meetings de masse où se pressent des milliers de sympathisants.\n\nLes thèmes dominants de cette campagne sont la gestion des ordures ménagères, l\'accès à l\'eau potable, et le développement des infrastructures de santé au niveau communautaire. La Commission électorale nationale indépendante rappelle les règles de bonne conduite et appelle tous les acteurs au respect du code électoral.',
+    '2026-03-16 11:00:00', 3, 3
+),
+
+-- Éducation
+(
+    'Bac 2026 : le calendrier officiel des épreuves publié',
+    'L\'Office du Baccalauréat vient de rendre public le programme des examens pour cette année.',
+    'L\'Office du Baccalauréat a officiellement communiqué le calendrier des épreuves du Baccalauréat 2026. Les candidats des séries scientifiques passeront leurs premières épreuves dès la deuxième semaine de juin, tandis que les séries littéraires et techniques suivront dans les jours qui viennent.\n\nCette année, plus de 200 000 candidats sont inscrits à travers le pays. Les autorités éducatives ont insisté sur la nécessité de bien se préparer et ont annoncé la mise en place de cours de révision gratuits dans plusieurs établissements publics. Des mesures anti-fraude renforcées seront également appliquées cette année.',
+    '2026-03-13 07:30:00', 4, 2
+),
+(
+    'Université Cheikh Anta Diop : ouverture de deux nouvelles filières',
+    'L\'UCAD enrichit son offre de formation avec des cursus en cybersécurité et en intelligence artificielle.',
+    'L\'Université Cheikh Anta Diop de Dakar a annoncé l\'ouverture de deux nouvelles filières pour la rentrée académique 2026-2027 : un master en cybersécurité et un master en intelligence artificielle appliquée. Ces formations, développées en partenariat avec des universités européennes et nord-américaines, répondent à une demande croissante du marché de l\'emploi.\n\nLes inscriptions seront ouvertes à partir du mois d\'avril. Les candidats devront justifier d\'une licence en informatique ou en mathématiques. Des bourses d\'excellence seront attribuées aux meilleurs dossiers pour encourager les étudiants méritants issus de milieux modestes.',
+    '2026-03-17 09:00:00', 4, 3
+),
+
+-- Culture
+(
+    'Festival Dakar Art Week : une édition record en vue',
+    'La capitale sénégalaise se prépare à accueillir des artistes du monde entier pour cet événement culturel majeur.',
+    'La Dakar Art Week s\'annonce exceptionnelle cette année avec la participation annoncée de plus de 150 artistes venus de 40 pays différents. Cet événement, devenu l\'un des rendez-vous culturels les plus importants du continent africain, investira les galeries, musées et espaces publics de la capitale pendant deux semaines.\n\nAu programme : expositions d\'art contemporain, performances live, ateliers ouverts au public, conférences et échanges entre artistes. Le thème central de cette édition est "Racines et Résilience", une invitation à explorer les liens entre mémoire collective et création contemporaine. L\'entrée sera gratuite pour plusieurs événements phares.',
+    '2026-03-18 10:00:00', 5, 2
+),
+(
+    'Cinéma africain : un film sénégalais sélectionné à Cannes',
+    'Une jeune réalisatrice dakaroise voit son premier long métrage retenu pour la compétition officielle.',
+    'C\'est une fierté nationale : le premier long métrage d\'une jeune réalisatrice sénégalaise de 28 ans vient d\'être officiellement sélectionné pour la compétition officielle du Festival de Cannes 2026. Ce film, tourné entièrement à Dakar et dans la région du Sine-Saloum, raconte l\'histoire d\'une femme qui renoue avec les traditions de sa famille après des années passées à l\'étranger.\n\nLa réalisatrice a exprimé sa joie et sa gratitude envers son équipe, entièrement composée de techniciens africains. Elle espère que ce succès ouvrira des portes pour d\'autres cinéastes du continent et contribuera à faire rayonner la culture sénégalaise à l\'international.',
+    '2026-03-19 08:00:00', 5, 3
+);
+
+-- ============================================================
+-- VÉRIFICATION RAPIDE (optionnel, à exécuter manuellement)
+-- ============================================================
+-- SELECT * FROM categories;
+-- SELECT id, nom, prenom, login, role FROM utilisateurs;
+-- SELECT a.id, a.titre, c.nom AS categorie, u.login AS auteur
+--   FROM articles a
+--   JOIN categories c ON a.id_categorie = c.id
+--   JOIN utilisateurs u ON a.id_auteur = u.id;

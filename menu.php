@@ -33,7 +33,7 @@ if (!isset($categorie_filtre)) {
     </div>
 
     <div class="masthead__logo">
-        <h1>La <span>Tribune</span></h1>
+        <h1> RAKH <span> INFO </span></h1>
         <p class="masthead__tagline">L'information au quotidien &mdash; Indépendante &amp; Rigoureuse</p>
     </div>
 
