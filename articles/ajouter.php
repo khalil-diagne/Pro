@@ -1,49 +1,77 @@
 <?php
+// On charge le fichier principal
 require_once '../config.php';
 
-// Sécurité : Vérifier que l'utilisateur est connecté et au moins 'editeur'
+// Sécurité : on vérifie que l'utilisateur est bien autorisé (ni déconnecté, ni simple visiteur)
 if (!isset($_SESSION['utilisateur']) || $_SESSION['utilisateur']['role'] === 'visiteur') {
+    // Si l'utilisateur n'a pas les droits, on le renvoie à la page de connexion
     header('Location: ' . BASE_URL . 'connexion.php');
     exit;
 }
 
+// Variable pour afficher un éventuel message d'erreur
 $erreur = '';
 
-// Récupération des catégories pour le DOM (SELECT)
-$categories_stmt = $pdo->query("SELECT id, nom FROM categories ORDER BY nom");
-$categories_list = $categories_stmt->fetchAll(PDO::FETCH_ASSOC);
+// On récupère la liste des catégories pour pouvoir les afficher dans le menu déroulant du formulaire
+$requete_categories = $pdo->query("SELECT id, nom FROM categories ORDER BY nom");
+$categories_list = $requete_categories->fetchAll();
 
+// Si l'utilisateur a cliqué sur le bouton "Publier l'article" (méthode POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $titre = trim($_POST['titre'] ?? '');
-    $description_courte = trim($_POST['description_courte'] ?? '');
-    $contenu = trim($_POST['contenu'] ?? '');
-    $id_categorie = $_POST['id_categorie'] ?? '';
+    
+    // On nettoie les informations reçues du formulaire
+    $titre = "";
+    if (isset($_POST['titre'])) {
+        $titre = htmlspecialchars(trim($_POST['titre']));
+    }
 
-    // Validation PHP Server-side
-    if (empty($titre) || empty($description_courte) || empty($contenu) || empty($id_categorie)) {
+    $description_courte = "";
+    if (isset($_POST['description_courte'])) {
+        $description_courte = htmlspecialchars(trim($_POST['description_courte']));
+    }
+
+    $contenu = "";
+    if (isset($_POST['contenu'])) {
+        $contenu = htmlspecialchars(trim($_POST['contenu']));
+    }
+
+    $id_categorie = "";
+    if (isset($_POST['id_categorie'])) {
+        $id_categorie = htmlspecialchars(trim($_POST['id_categorie']));
+    }
+
+    // On vérifie qu'aucun champ n'a été oublié
+    if ($titre === '' || $description_courte === '' || $contenu === '' || $id_categorie === '') {
         $erreur = "Tous les champs sont obligatoires.";
     } else {
-        // Validation OK, on insère avec une requête préparée
+        // Validation OK, on insère les données dans la base de données
+        // NOW() permet de mettre la date et l'heure actuelles
         $sql = "INSERT INTO articles (titre, description_courte, contenu, id_categorie, id_auteur, date_publication) 
                 VALUES (:titre, :desc, :contenu, :cat, :auteur, NOW())";
-        $stmt = $pdo->prepare($sql);
+        
+        $requete_ajout = $pdo->prepare($sql);
+        
         try {
-            $stmt->execute([
+            $requete_ajout->execute([
                 ':titre'   => $titre,
                 ':desc'    => $description_courte,
                 ':contenu' => $contenu,
                 ':cat'     => $id_categorie,
-                ':auteur'  => $_SESSION['utilisateur']['id']
+                ':auteur'  => $_SESSION['utilisateur']['id'] // On utilise l'ID de l'utilisateur connecté comme auteur
             ]);
             
+            // Si l'enregistrement a réussi, on renvoie vers l'accueil
             header('Location: ' . BASE_URL . 'accueil.php');
             exit;
+            
         } catch (PDOException $e) {
-            $erreur = "Erreur PDO lors de l'ajout : " . $e->getMessage();
+            // S'il y a un problème technique lors de la sauvegarde
+            $erreur = "Erreur de base de données lors de l'ajout : " . $e->getMessage();
         }
     }
 }
 ?>
+<!-- Inclusion de l'entête et du menu de navigation -->
 <?php require_once '../entete.php'; ?>
 <?php require_once '../menu.php'; ?>
 
@@ -52,12 +80,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2>Ajouter un nouvel article</h2>
     </div>
 
-    <?php if ($erreur): ?>
+    <?php 
+    // S'il y a eu une erreur, on l'affiche
+    if ($erreur !== "") { 
+    ?>
         <div style="background:var(--accent); color:#fff; padding:10px; margin-bottom:20px; text-align:center;">
-            <?= htmlspecialchars($erreur, ENT_QUOTES, 'UTF-8') ?>
+            <?php echo htmlspecialchars($erreur); ?>
         </div>
-    <?php endif; ?>
+    <?php 
+    } 
+    ?>
 
+    <!-- Formulaire d'ajout -->
     <form method="post" id="formAjoutArt" action="ajouter.php" style="display:flex; flex-direction:column; gap:1.5rem; background:var(--paper-dark); padding:2.5rem; border-radius:4px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
         
         <div style="display:flex; flex-direction:column; gap:.5rem;">
@@ -72,9 +106,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <select name="id_categorie" id="id_categorie" required
                     style="padding: 12px; font-family:var(--font-body); font-size:1rem; border:1px solid var(--paper-rule); border-radius:3px; background:#fff;">
                 <option value="">-- Choisir une catégorie --</option>
-                <?php foreach ($categories_list as $cat): ?>
-                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom'], ENT_QUOTES, 'UTF-8') ?></option>
-                <?php endforeach; ?>
+                <?php 
+                // On boucle sur la liste des catégories récupérées plus haut
+                foreach ($categories_list as $cat) { 
+                ?>
+                    <option value="<?php echo $cat['id']; ?>">
+                        <?php echo htmlspecialchars($cat['nom']); ?>
+                    </option>
+                <?php 
+                } 
+                ?>
             </select>
             <span class="err-msg" id="err-cat" style="color:var(--accent); font-size:0.8rem; display:none;">La catégorie est obligatoire.</span>
         </div>
@@ -100,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <script>
-// Validation JS côté client
+// Validation JavaScript côté navigateur
 document.getElementById('formAjoutArt').addEventListener('submit', function(e) {
     let hasError = false;
     let titre = document.getElementById('titre').value.trim();
@@ -116,13 +157,13 @@ document.getElementById('formAjoutArt').addEventListener('submit', function(e) {
     if (contenu === '') { document.getElementById('err-contenu').style.display = 'block'; hasError = true; }
 
     if (hasError) {
-        e.preventDefault(); // Annule la soumission
+        e.preventDefault(); // Annule la soumission si un champ est vide
     }
 });
 </script>
 
 <footer class="footer">
-    &copy; <?= date('Y') ?> La Tribune &mdash; Tous droits réservés
+    &copy; <?php echo date('Y'); ?> La Tribune &mdash; Tous droits réservés
 </footer>
 </body>
 </html>

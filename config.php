@@ -1,85 +1,89 @@
 <?php
+// On démarre la session pour pouvoir stocker des informations (comme l'utilisateur connecté)
 session_start();
+
+// On affiche toutes les erreurs PHP pour faciliter le débogage (à enlever en production)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Connexion DB (même config que les autres fichiers)
+// ==========================================
+// 1. CONNEXION À LA BASE DE DONNÉES
+// ==========================================
 try {
-    $dbHost = 'localhost'; // ca dependra du deploiement
+    $dbHost = 'localhost';
     $dbUser = 'root';
     $dbPass = '';
     $dbName = 'site_actualite';
 
+    // On crée la connexion avec PDO
     $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4", $dbUser, $dbPass);
+    
+    // On demande à PDO d'afficher les erreurs sous forme d'exceptions
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 } catch (PDOException $e) {
-    die('Erreur BDD: ' . $e->getMessage());
+    // Si la connexion échoue, on arrête tout et on affiche l'erreur
+    die('Erreur de connexion à la base de données : ' . $e->getMessage());
 }
 
-// --- Fonctions utilitaires ---
+// ==========================================
+// 2. FONCTIONS PRATIQUES (UTILITAIRES)
+// ==========================================
 
-/**
- * Vérifie si l'utilisateur est connecté
- */
-function estConnecte(): bool
-{
-    return isset($_SESSION['user_id']);
+function estConnecte() {
+    if (isset($_SESSION['user_id'])) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
-/**
- * Vérifie si l'utilisateur est admin
- */
-function estAdmin(): bool
-{
-    return estConnecte() && $_SESSION['role'] === 'admin';
+function estAdmin() {
+    if (estConnecte() == true) {
+        if ($_SESSION['role'] === 'admin') {
+            return true;
+        }
+    }
+    return false;
 }
 
-/**
- * Redirige vers la page de connexion si non connecté
- */
-function protegerRoute(): void
-{
-    if (!estConnecte()) {
+function protegerRoute() {
+    if (estConnecte() == false) {
         header('Location: connexion.php');
         exit;
     }
 }
-
-/**
- * Redirige vers l'accueil si non connecté
- */
-function protegerRouteAdmin(): void
-{
-    if (!estAdmin()) {
+function protegerRouteAdmin() {
+    if (estAdmin() == false) {
         header('Location: accueil.php');
         exit;
     }
 }
 
 /**
- * Formate une date
+ * Formate une date d'une façon plus lisible (jour/mois/année à heure:minute)
  */
-function formaterDate(string $date): string
-{
+function formaterDate($date) {
     return date('d/m/Y à H:i', strtotime($date));
 }
 
 /**
- * Tronque un texte
+ * Coupe un texte trop long et rajoute "..." à la fin
  */
-function tronquerTexte(string $texte, int $longueur = 150): string
-{
+function tronquerTexte($texte, $longueur = 150) {
+    // Si le texte est déjà court, on le renvoie tel quel
     if (strlen($texte) <= $longueur) {
         return $texte;
     }
+    
+    // Sinon on le coupe
     return substr($texte, 0, $longueur) . '...';
 }
 
 /**
- * Affiche un message flash
+ * Prépare un message temporaire (appelé "message flash") pour l'afficher à la prochaine page
  */
-function afficherMessage(string $message, string $type = 'info'): void
-{
+function afficherMessage($message, $type = 'info') {
     $_SESSION['message'] = [
         'texte' => $message,
         'type' => $type
@@ -87,25 +91,38 @@ function afficherMessage(string $message, string $type = 'info'): void
 }
 
 /**
- * Affiche et supprime le message flash
+ * Affiche le message temporaire s'il y en a un, puis le supprime pour ne pas le réafficher
  */
-function afficherEtSupprimerMessage(): void
-{
+function afficherEtSupprimerMessage() {
+    // On vérifie s'il y a un message en session
     if (isset($_SESSION['message'])) {
-        $message = $_SESSION['message'];
+        
+        // On récupère le texte et le type
+        $texteMessage = $_SESSION['message']['texte'];
+        
+        // On vérifie le type (info par défaut)
+        $typeMessage = 'info';
+        if (isset($_SESSION['message']['type'])) {
+            $typeMessage = $_SESSION['message']['type'];
+        }
+        
+        // On supprime le message pour qu'il n'apparaisse qu'une seule fois
         unset($_SESSION['message']);
 
-        $classes = [
-            'info' => 'bg-blue-100 text-blue-800',
-            'success' => 'bg-green-100 text-green-800',
-            'error' => 'bg-red-100 text-red-800'
-        ];
+        // On prépare les couleurs selon le type du message
+        $classeCss = 'bg-blue-100 text-blue-800'; // Bleu par défaut (info)
+        
+        if ($typeMessage === 'success') {
+            $classeCss = 'bg-green-100 text-green-800'; // Vert (succès)
+        }
+        if ($typeMessage === 'error') {
+            $classeCss = 'bg-red-100 text-red-800'; // Rouge (erreur)
+        }
 
-        $classe = $classes[$message['type'] ?? 'info'] ?? $classes['info'];
-
-        echo "<div class='{$classe} px-4 py-3 rounded relative mb-4' role='alert'>
-                {$message['texte']}
-              </div>";
+        // On affiche le code HTML
+        echo "<div class='" . $classeCss . " px-4 py-3 rounded relative mb-4' role='alert'>";
+        echo $texteMessage;
+        echo "</div>";
     }
 }
 

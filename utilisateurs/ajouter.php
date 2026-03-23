@@ -1,62 +1,106 @@
 <?php
+// On inclut le fichier de configuration technique
 require_once '../config.php';
 
+// On vérifie si l'utilisateur est un administrateur
 if (!isset($_SESSION['utilisateur']) || $_SESSION['utilisateur']['role'] !== 'administrateur') {
+    // Si ce n'est pas le cas, on le redirige vers l'accueil
     header('Location: ' . BASE_URL . 'accueil.php');
     exit;
 }
 
+// Variable pour afficher un éventuel message d'erreur
 $erreur = '';
 
+// Si le formulaire d'ajout est soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nom          = trim($_POST['nom'] ?? '');
-    $prenom       = trim($_POST['prenom'] ?? '');
-    $login        = trim($_POST['login'] ?? '');
-    $mot_de_passe = $_POST['mot_de_passe'] ?? '';
-    $role         = $_POST['role'] ?? 'visiteur';
+    
+    // On récupère toutes les informations saisies
+    $nom = "";
+    if (isset($_POST['nom'])) {
+        $nom = htmlspecialchars(trim($_POST['nom']));
+    }
 
+    $prenom = "";
+    if (isset($_POST['prenom'])) {
+        $prenom = htmlspecialchars(trim($_POST['prenom']));
+    }
+
+    $login = "";
+    if (isset($_POST['login'])) {
+        $login = htmlspecialchars(trim($_POST['login']));
+    }
+
+    $mot_de_passe = "";
+    if (isset($_POST['mot_de_passe'])) {
+        $mot_de_passe = password_hash($_POST['mot_de_passe'], PASSWORD_DEFAULT);
+    }
+
+    $role = "visiteur"; // par défaut
+    if (isset($_POST['role'])) {
+        $role = htmlspecialchars(trim($_POST['role']));
+    }
+
+    // On vérifie qu'aucun champ n'est vide
     if (empty($nom) || empty($prenom) || empty($login) || empty($mot_de_passe)) {
         $erreur = "Tous les champs sont requis.";
-    } elseif (!in_array($role, ['visiteur', 'editeur', 'administrateur'])) {
+    } elseif ($role !== 'visiteur' && $role !== 'editeur' && $role !== 'administrateur') {
+        // On s'assure que le rôle envoyé existe bien
         $erreur = "Rôle invalide.";
     } else {
+        // C'est bon, on chiffre (crypte) le mot de passe avant de l'enregistrer
         $hash = password_hash($mot_de_passe, PASSWORD_DEFAULT);
 
-        $stmt = $pdo->prepare("INSERT INTO utilisateurs (nom, prenom, login, mot_de_passe, role) VALUES (:nom, :prenom, :login, :mdp, :role)");
+        // On prépare l'insertion dans la base de données
+        $requete = $pdo->prepare("INSERT INTO utilisateurs (nom, prenom, login, mot_de_passe, role) VALUES (:nom, :prenom, :login, :mdp, :role)");
+        
         try {
-            $stmt->execute([
+            // On exécute avec les informations
+            $requete->execute([
                 ':nom'    => $nom,
                 ':prenom' => $prenom,
                 ':login'  => $login,
                 ':mdp'    => $hash,
                 ':role'   => $role
             ]);
+            
+            // On renvoie à la liste avec un message de succès
             header('Location: index.php?msg=' . urlencode('Utilisateur ajouté.'));
             exit;
+            
         } catch (PDOException $e) {
+            // S'il y a une erreur dans la base, par exemple ce login existe déjà (code 23000)
             if ($e->getCode() == 23000) {
-                $erreur = "Ce login ($login) est déjà utilisé.";
+                $erreur = "Ce login (" . $login . ") est déjà utilisé.";
             } else {
-                $erreur = "Erreur PDO : " . $e->getMessage();
+                $erreur = "Erreur de base de données : " . $e->getMessage();
             }
         }
     }
 }
 ?>
+<!-- Inclusion de l'entête et du menu -->
 <?php require_once '../entete.php'; ?>
 <?php require_once '../menu.php'; ?>
 
+<!-- Contenu principal -->
 <main class="wrapper" style="max-width: 600px;">
     <div class="section-head">
         <h2>Ajouter un utilisateur</h2>
     </div>
 
-    <?php if ($erreur): ?>
+    <?php 
+    // S'il y a une erreur, on l'affiche
+    if ($erreur !== '') { 
+    ?>
         <div style="background:var(--accent); color:#fff; padding:10px; margin-bottom:20px; text-align:center;">
-            <?= htmlspecialchars($erreur, ENT_QUOTES, 'UTF-8') ?>
+            <?php echo htmlspecialchars($erreur); ?>
         </div>
-    <?php endif; ?>
+    <?php 
+    } 
+    ?>
 
+    <!-- Formulaire d'ajout d'utilisateur -->
     <form method="post" id="formAjoutUser" action="ajouter.php" style="display:flex; flex-direction:column; gap:1.5rem; background:var(--paper-dark); padding:2rem; border-radius:4px;">
         
         <div style="display:flex; gap:1rem;">
@@ -109,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 </main>
 
+<!-- Validation par le navigateur (client) -->
 <script>
 document.getElementById('formAjoutUser').addEventListener('submit', function(e) {
     let hasError = false;
@@ -131,7 +176,7 @@ document.getElementById('formAjoutUser').addEventListener('submit', function(e) 
 </script>
 
 <footer class="footer">
-    &copy; <?= date('Y') ?> La Tribune &mdash; Tous droits réservés
+    &copy; <?php echo date('Y'); ?> La Tribune &mdash; Tous droits réservés
 </footer>
 </body>
 </html>

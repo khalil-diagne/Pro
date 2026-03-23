@@ -1,65 +1,88 @@
 <?php
+// On charge d'abord le fichier de configuration (connexion BDD, etc.)
 require_once 'config.php';
 
-// Si l'utilisateur est déjà connecté, redirection vers l'accueil
+// Si l'utilisateur est déjà connecté, on n'a pas besoin de ce formulaire
 if (isset($_SESSION['utilisateur'])) {
+    // On le redirige vers l'accueil
     header('Location: accueil.php');
     exit;
 }
 
+// On prépare une variable pour stocker d'éventuels messages d'erreur
 $erreur = '';
 
+// On vérifie si le formulaire a été envoyé (si la méthode est POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Échappement préventif et trim
-    $login = trim($_POST['login'] ?? '');
-    $mot_de_passe = $_POST['mot_de_passe'] ?? '';
+    
+    // On récupère les données envoyées et on les sécurise (htmlspecialchars)
+    $login = htmlspecialchars($_POST['login']);
+    $mot_de_passe = htmlspecialchars($_POST['mot_de_passe']);
 
-    // Validation PHP côté serveur
-    if (empty($login) || empty($mot_de_passe)) {
-        $erreur = "Tous les champs sont requis.";
+    // 1. On vérifie si les champs sont bien remplis
+    if (empty($login)) {
+        $erreur = "Le nom d'utilisateur est requis.";
+    } elseif (empty($mot_de_passe)) {
+        $erreur = "Le mot de passe est requis.";
     } else {
-        // Prévention injection SQL : utilisation de requête préparée PDO
-        $stmt = $pdo->prepare("SELECT id, nom, prenom, login, mot_de_passe, role FROM utilisateurs WHERE login = :login");
-        $stmt->bindValue(':login', $login, PDO::PARAM_STR);
-        $stmt->execute();
+        // 2. Préparation de la requête pour chercher cet utilisateur dans la base de données
+        $requete = $pdo->prepare("SELECT id, nom, prenom, login, mot_de_passe, role FROM utilisateurs WHERE login = :login");
+        $requete->bindValue(':login', $login);
+        $requete->execute();
         
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        // On récupère l'utilisateur trouvé
+        $user = $requete->fetch();
 
-        // Vérification du mot de passe avec password_verify
-        if ($user && password_verify($mot_de_passe, $user['mot_de_passe'])) {
-            // Regénération de l'ID de session pour prévenir la fixation de session (sécurité)
-            session_regenerate_id(true);
-
-            // Enregistrement des données en session
-            $_SESSION['utilisateur'] = [
-                'id'     => $user['id'],
-                'nom'    => $user['nom'],
-                'prenom' => $user['prenom'],
-                'role'   => $user['role']
-            ];
+        // 3. On vérifie si l'utilisateur existe ET si le mot de passe correspond au hash dans la BDD
+        if ($user) {
+            $motDePasseValide = password_verify($mot_de_passe, $user['mot_de_passe']);
             
-            header('Location: accueil.php');
-            exit;
+            if ($motDePasseValide) {
+                // Tout est bon, on régénère l'identifiant de la session (mesure de sécurité)
+                session_regenerate_id(true);
+    
+                // On enregistre les données de l'utilisateur dans la session
+                $_SESSION['utilisateur'] = [
+                    'id'     => $user['id'],
+                    'nom'    => $user['nom'],
+                    'prenom' => $user['prenom'],
+                    'role'   => $user['role']
+                ];
+                
+                // On redirige vers l'accueil
+                header('Location: accueil.php');
+                exit;
+            } else {
+                $erreur = "Mot de passe incorrect.";
+            }
         } else {
-            $erreur = "Identifiants incorrects.";
+            $erreur = "Identifiant non reconnu.";
         }
     }
 }
 ?>
+<!-- Inclusion du haut de page et du menu -->
 <?php require_once 'entete.php'; ?>
 <?php require_once 'menu.php'; ?>
 
+<!-- Contenu de la page -->
 <main class="wrapper" style="max-width: 500px;">
     <div class="section-head">
         <h2>Connexion</h2>
     </div>
 
-    <?php if ($erreur): ?>
+    <?php 
+    // S'il y a une erreur, on l'affiche
+    if ($erreur !== '') { 
+    ?>
         <div style="background:var(--accent); color:#fff; padding:10px; margin-bottom:20px; text-align:center;">
-            <?= htmlspecialchars($erreur, ENT_QUOTES, 'UTF-8') ?>
+            <?php echo htmlspecialchars($erreur); ?>
         </div>
-    <?php endif; ?>
+    <?php 
+    } 
+    ?>
 
+    <!-- Formulaire de connexion -->
     <form method="post" action="connexion.php" id="formConnexion" style="display:flex; flex-direction:column; gap:1.5rem;">
         
         <div style="display:flex; flex-direction:column; gap:.5rem;">
@@ -112,7 +135,7 @@ document.getElementById('formConnexion').addEventListener('submit', function(e) 
 </script>
 
 <footer class="footer">
-    &copy; <?= date('Y') ?> La Tribune &mdash; Tous droits réservés
+    &copy; <?php echo date('Y'); ?> La Tribune &mdash; Tous droits réservés
 </footer>
 </body>
 </html>
