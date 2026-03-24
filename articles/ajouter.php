@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             
             // Si l'enregistrement a réussi, on renvoie vers l'accueil
-            header('Location: ' . BASE_URL . 'accueil.php');
+            header('Location: ' . BASE_URL . 'index.php');
             exit;
             
         } catch (PDOException $e) {

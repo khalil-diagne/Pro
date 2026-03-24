@@ -31,6 +31,6 @@ if ($id_article > 0) {
 }
 
 // 3. Qu'il y ait eu succès ou non, on redirige l'utilisateur vers la page d'accueil (tableau de bord)
-header('Location: ' . BASE_URL . 'accueil.php');
+header('Location: ' . BASE_URL . 'index.php');
 exit;
 ?>

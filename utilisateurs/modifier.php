@@ -4,7 +4,7 @@ require_once '../config.php';
 
 // Protection Exclusive : seuls les administrateurs ont le droit de voir cette page
 if (!isset($_SESSION['utilisateur']) || $_SESSION['utilisateur']['role'] !== 'administrateur') {
-    header('Location: ' . BASE_URL . 'accueil.php');
+    header('Location: ' . BASE_URL . 'index.php');
     exit;
 }
 

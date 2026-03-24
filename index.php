@@ -12,7 +12,7 @@ $articles_par_page = 10;
 $page_courante = 1;
 if (isset($_GET['page'])) {
     if (ctype_digit($_GET['page'])) { // Vérifie que c'est bien un nombre
-        $page_courante = (int) $_GET['page'];
+        $page_courante = (int)$_GET['page'];
     }
 }
 
@@ -28,7 +28,7 @@ $offset = ($page_courante - 1) * $articles_par_page;
 $categorie_filtre = null;
 if (isset($_GET['categorie'])) {
     if (ctype_digit($_GET['categorie'])) {
-        $categorie_filtre = (int) $_GET['categorie'];
+        $categorie_filtre = (int)$_GET['categorie'];
     }
 }
 
@@ -38,13 +38,14 @@ if ($categorie_filtre !== null) {
     $requete_comptage = $pdo->prepare("SELECT COUNT(*) FROM articles WHERE id_categorie = :cat");
     $requete_comptage->bindValue(':cat', $categorie_filtre);
     $requete_comptage->execute();
-} else {
+}
+else {
     // Si on veut tous les articles
     $requete_comptage = $pdo->query("SELECT COUNT(*) FROM articles");
 }
 
 // On récupère le nombre total d'articles qui correspondent
-$total_articles = (int) $requete_comptage->fetchColumn();
+$total_articles = (int)$requete_comptage->fetchColumn();
 
 // On calcule le nombre total de pages nécessaires
 $total_pages = ceil($total_articles / $articles_par_page);
@@ -75,7 +76,8 @@ if ($categorie_filtre !== null) {
     $requete_articles->bindValue(':limit', $articles_par_page, PDO::PARAM_INT);
     $requete_articles->bindValue(':off', $offset, PDO::PARAM_INT);
     $requete_articles->execute();
-} else {
+}
+else {
     // On récupère les articles de toutes les catégories
     $requete_articles = $pdo->prepare("
         SELECT a.id, a.titre, a.description_courte, a.date_publication,
@@ -112,18 +114,20 @@ if ($categorie_filtre !== null) {
 // 7. Options de couleurs pour chaque catégorie
 $couleurs_cat = [
     'Technologie' => '#1a6bcc',
-    'Sport'       => '#e63c2f',
-    'Politique'   => '#2a7a4b',
-    'Éducation'   => '#9b4dca',
-    'Culture'     => '#d4820a',
+    'Sport' => '#e63c2f',
+    'Politique' => '#2a7a4b',
+    'Éducation' => '#9b4dca',
+    'Culture' => '#d4820a',
 ];
 
 // Fonction simple pour trouver la bonne couleur
-function couleurCat($nom, $tableau_couleurs) {
+function couleurCat($nom, $tableau_couleurs)
+{
     // Si la catégorie est dans notre tableau, on renvoie sa couleur, sinon une couleur par défaut gris
     if (isset($tableau_couleurs[$nom])) {
         return $tableau_couleurs[$nom];
-    } else {
+    }
+    else {
         return '#555';
     }
 }
@@ -138,58 +142,61 @@ function couleurCat($nom, $tableau_couleurs) {
 
     <div class="section-head">
         <h2>
-            <?php 
-            if ($nom_categorie_active !== '') {
-                echo htmlspecialchars($nom_categorie_active);
-            } else {
-                echo "Dernières actualités";
-            }
-            ?>
+            <?php
+if ($nom_categorie_active !== '') {
+    echo htmlspecialchars($nom_categorie_active);
+}
+else {
+    echo "Dernières actualités";
+}
+?>
         </h2>
         
         <span class="count">
-            <?php 
-            // On gère le "s" pour préciser s'il y a 1 ou plusieurs article(s)
-            $mot_article = "article";
-            if ($total_articles > 1) {
-                $mot_article = "articles";
-            }
-            
-            echo $total_articles . " " . $mot_article . " &mdash; page " . $page_courante . "/" . $total_pages; 
-            ?>
+            <?php
+// On gère le "s" pour préciser s'il y a 1 ou plusieurs article(s)
+$mot_article = "article";
+if ($total_articles > 1) {
+    $mot_article = "articles";
+}
+
+echo $total_articles . " " . $mot_article . " &mdash; page " . $page_courante . "/" . $total_pages;
+?>
         </span>
     </div>
 
     <div class="articles-grid">
 
-        <?php 
-        // Si on n'a trouvé aucun article
-        if (empty($articles)) { 
-        ?>
+        <?php
+// Si on n'a trouvé aucun article
+if (empty($articles)) {
+?>
             <div class="empty-state">
                 <div class="empty-state__icon">✦</div>
                 <p>Aucun article disponible pour le moment.</p>
             </div>
-        <?php 
-        } else { 
-            // Sinon, on affiche chaque article tour à tour
-            foreach ($articles as $index => $article) {
-                
-                // On détermine quel style utiliser pour mettre en évidence le premier article
-                $card_class = 'article-card--standard';
-                
-                if ($index === 0) {
-                    $card_class = 'article-card--featured'; // Très grand article principal
-                } elseif ($index < 3 && $categorie_filtre === null) {
-                    $card_class = 'article-card--secondary'; // Articles secondaires de taille moyenne
-                }
+        <?php
+}
+else {
+    // Sinon, on affiche chaque article tour à tour
+    foreach ($articles as $index => $article) {
 
-                // On récupère sa couleur
-                $couleur = couleurCat($article['categorie'], $couleurs_cat);
-                
-                // On formate la date d'affichage
-                $date_fmt = date('d/m/Y à H\hi', strtotime($article['date_publication']));
-            ?>
+        // On détermine quel style utiliser pour mettre en évidence le premier article
+        $card_class = 'article-card--standard';
+
+        if ($index === 0) {
+            $card_class = 'article-card--featured'; // Très grand article principal
+        }
+        elseif ($index < 3 && $categorie_filtre === null) {
+            $card_class = 'article-card--secondary'; // Articles secondaires de taille moyenne
+        }
+
+        // On récupère sa couleur
+        $couleur = couleurCat($article['categorie'], $couleurs_cat);
+
+        // On formate la date d'affichage
+        $date_fmt = date('d/m/Y à H\hi', strtotime($article['date_publication']));
+?>
             
             <!-- Carte pour un article -->
             <article class="article-card <?php echo $card_class; ?>">
@@ -220,12 +227,12 @@ function couleurCat($nom, $tableau_couleurs) {
                         Lire &rarr;
                     </a>
 
-                    <?php 
-                    // Si l'utilisateur a le droit (éditeur ou administrateur), on affiche les boutons d'action
-                    if (isset($_SESSION['utilisateur'])) {
-                        $role = $_SESSION['utilisateur']['role'];
-                        if ($role === 'editeur' || $role === 'administrateur') {
-                    ?>
+                    <?php
+        // Si l'utilisateur a le droit (éditeur ou administrateur), on affiche les boutons d'action
+        if (isset($_SESSION['utilisateur'])) {
+            $role = $_SESSION['utilisateur']['role'];
+            if ($role === 'editeur' || $role === 'administrateur') {
+?>
                             <span class="sep">|</span>
                             <a class="card__lire" href="articles/modifier.php?id=<?php echo (int)$article['id']; ?>">Modifier</a>
                             <span class="sep">|</span>
@@ -235,52 +242,54 @@ function couleurCat($nom, $tableau_couleurs) {
                                style="color:#c0392b">
                                 Supprimer
                             </a>
-                    <?php 
-                        }
-                    } 
-                    ?>
+                    <?php
+            }
+        }
+?>
                 </div>
             </article>
             
-            <?php 
-            } // fin foreach 
-        } // fin if empty
-        ?>
+            <?php
+    } // fin foreach 
+} // fin if empty
+?>
 
     </div>
 
     <!-- ======= PAGINATION (Les boutons pour aller aux pages suivantes) ======= -->
-    <?php 
-    // On n'affiche la pagination que si on a plus d'une seule page
-    if ($total_pages > 1) { 
-    ?>
+    <?php
+// On n'affiche la pagination que si on a plus d'une seule page
+if ($total_pages > 1) {
+?>
     <nav class="pagination" aria-label="Pagination">
 
         <?php
-        // On construit l'URL de base (ex: accueil.php?categorie=2&)
-        $base_url = 'index.php?';
-        if ($categorie_filtre !== null) {
-            $base_url = 'index.php?categorie=' . $categorie_filtre . '&';
-        }
+    // On construit l'URL de base (ex: accueil.php?categorie=2&)
+    $base_url = 'index.php?';
+    if ($categorie_filtre !== null) {
+        $base_url = 'index.php?categorie=' . $categorie_filtre . '&';
+    }
 
-        // On détermine si le bouton précédent doit être désactivé
-        $classeBtnPrecedent = "btn-page";
-        $lienPrecedent = "#";
-        if ($page_courante <= 1) {
-            $classeBtnPrecedent = "btn-page btn-page--disabled"; // Désactivé (on est sur la page 1)
-        } else {
-            $lienPrecedent = $base_url . 'page=' . ($page_courante - 1);
-        }
-        
-        // On détermine si le bouton suivant doit être désactivé
-        $classeBtnSuivant = "btn-page";
-        $lienSuivant = "#";
-        if ($page_courante >= $total_pages) {
-            $classeBtnSuivant = "btn-page btn-page--disabled"; // Désactivé (on est sur la dernière page)
-        } else {
-            $lienSuivant = $base_url . 'page=' . ($page_courante + 1);
-        }
-        ?>
+    // On détermine si le bouton précédent doit être désactivé
+    $classeBtnPrecedent = "btn-page";
+    $lienPrecedent = "#";
+    if ($page_courante <= 1) {
+        $classeBtnPrecedent = "btn-page btn-page--disabled"; // Désactivé (on est sur la page 1)
+    }
+    else {
+        $lienPrecedent = $base_url . 'page=' . ($page_courante - 1);
+    }
+
+    // On détermine si le bouton suivant doit être désactivé
+    $classeBtnSuivant = "btn-page";
+    $lienSuivant = "#";
+    if ($page_courante >= $total_pages) {
+        $classeBtnSuivant = "btn-page btn-page--disabled"; // Désactivé (on est sur la dernière page)
+    }
+    else {
+        $lienSuivant = $base_url . 'page=' . ($page_courante + 1);
+    }
+?>
 
         <a class="<?php echo $classeBtnPrecedent; ?>" href="<?php echo $lienPrecedent; ?>">
             <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
@@ -297,9 +306,9 @@ function couleurCat($nom, $tableau_couleurs) {
         </a>
 
     </nav>
-    <?php 
-    } // fin if total_pages
-    ?>
+    <?php
+} // fin if total_pages
+?>
 
 </main>
 

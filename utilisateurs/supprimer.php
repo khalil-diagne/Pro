@@ -4,7 +4,7 @@ require_once '../config.php';
 
 // Vérifier que l'utilisateur est bien un administrateur
 if (!isset($_SESSION['utilisateur']) || $_SESSION['utilisateur']['role'] !== 'administrateur') {
-    header('Location: ' . BASE_URL . 'accueil.php');
+    header('Location: ' . BASE_URL . 'index.php');
     exit;
 }
 
