@@ -11,7 +11,7 @@ if (!isset($_SESSION['utilisateur']) || $_SESSION['utilisateur']['role'] !== 'ad
 // 1. On récupère et vérifie l'ID de l'utilisateur à supprimer
 $id_user = 0;
 if (isset($_GET['id'])) {
-    if (ctype_digit($_GET['id'])) {
+    if (ctype_digit($_GET['id'])) {     
         $id_user = (int) $_GET['id'];
     }
 }

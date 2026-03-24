@@ -133,7 +133,6 @@ document.getElementById('formConnexion').addEventListener('submit', function(e) 
     }
 });
 </script>
-
 <footer class="footer">
     &copy; <?php echo date('Y'); ?> La Tribune &mdash; Tous droits réservés
 </footer>

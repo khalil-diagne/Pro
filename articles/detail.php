@@ -6,7 +6,7 @@ require_once '../config.php';
 $id_article = 0;
 if (isset($_GET['id'])) {
     if (ctype_digit($_GET['id'])) {
-        $id_article = (int) $_GET['id'];
+        $id_article = (int)$_GET['id'];
     }
 }
 
@@ -38,7 +38,7 @@ $article = $requete->fetch();
 
 // Si l'article n'existe pas dans la base de données, on retourne à l'accueil
 if (!$article) {
-    header('Location: ' . BASE_URL . 'accueil.php');
+    header('Location: ' . BASE_URL . 'index.php');
     exit;
 }
 ?>
@@ -78,10 +78,10 @@ if (!$article) {
 
         <!-- Contenu de l'article -->
         <div class="article-content" style="font-size: 1.15rem; line-height: 1.85; color: var(--ink-light);">
-            <?php 
-            // - nl2br() transforme les simples retours à la ligne de la base de données en balises HTML <br> pour un affichage propre.
-            echo nl2br(htmlspecialchars($article['contenu'])); 
-            ?>
+            <?php
+// - nl2br() transforme les simples retours à la ligne de la base de données en balises HTML <br> pour un affichage propre.
+echo nl2br(htmlspecialchars($article['contenu']));
+?>
         </div>
 
     </article>

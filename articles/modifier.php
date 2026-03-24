@@ -181,7 +181,6 @@ if (isset($_POST['id_categorie'])) { $val_cat = $_POST['id_categorie']; }
         </div>
     </form>
 </main>
-
 <script>
 // Validation JavaScript côté navigateur
 document.getElementById('formModifArt').addEventListener('submit', function(e) {
