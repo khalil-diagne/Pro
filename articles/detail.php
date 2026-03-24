@@ -52,7 +52,7 @@ if (!$article) {
         
         <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
             <!-- Lien de retour -->
-            <a href="<?php echo BASE_URL; ?>index.php" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint);">&larr; Retour à l'index</a>
+            <a href="<?php echo BASE_URL; ?>index.php" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint);">&larr; Retour à l'accueil</a>
             
             <!-- Affichage de la catégorie -->
             <span class="card__badge" style="background:var(--ink); padding:0.3rem 0.6rem; margin-bottom: 0;">
