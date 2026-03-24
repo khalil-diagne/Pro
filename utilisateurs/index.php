@@ -116,7 +116,7 @@ if (isset($_GET['err'])) {
                 </td>
             </tr>
             <?php 
-            } // fin foreach 
+            } /
             ?>
         </tbody>
         

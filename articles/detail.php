@@ -12,7 +12,7 @@ if (isset($_GET['id'])) {
 
 // Si l'ID est invalide (égal à 0), on redirige vers l'accueil
 if ($id_article === 0) {
-    header('Location: ' . BASE_URL . 'accueil.php');
+    header('Location: ' . BASE_URL . 'index.php');
     exit;
 }
 

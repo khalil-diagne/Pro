@@ -71,7 +71,7 @@ INSERT INTO utilisateurs (nom, prenom, login, mot_de_passe, role) VALUES
     'Diallo',
     'Mamadou',
     'admin',
-    '$2y$12$eImiTXuWVxfM37uY4JANjQe5zKSzwKCKfTRlsHpJ3FwFEAtyMz6Oa', -- admin123
+    '$2y$12$eImiTXuWVxfM37uY4JANjQe5zKSzwKCKfTRlsHpJ3FwFEAtyMz6Oa', -- admin123 
     'administrateur'
 ),
 (

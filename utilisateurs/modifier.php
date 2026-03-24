@@ -99,7 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Redirection vers la liste
             header('Location: index.php?msg=' . urlencode('Utilisateur modifié avec succès.'));
             exit;
-            
         } catch (PDOException $e) {
             // Si le login est déjà utilisé (code 23000)
             if ($e->getCode() == 23000) {
