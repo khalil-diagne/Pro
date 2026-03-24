@@ -10,7 +10,7 @@ if (isset($_GET['id'])) {
     }
 }
 
-// Si l'ID est invalide (égal à 0), on redirige vers l'accueil
+// Si l'ID est invalide (égal à 0), on redirige vers l'index
 if ($id_article === 0) {
     header('Location: ' . BASE_URL . 'index.php');
     exit;
@@ -36,7 +36,7 @@ $requete->execute();
 // On stocke le résultat
 $article = $requete->fetch();
 
-// Si l'article n'existe pas dans la base de données, on retourne à l'accueil
+// Si l'article n'existe pas dans la base de données, on retourne à l'index
 if (!$article) {
     header('Location: ' . BASE_URL . 'index.php');
     exit;
@@ -52,7 +52,7 @@ if (!$article) {
         
         <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
             <!-- Lien de retour -->
-            <a href="<?php echo BASE_URL; ?>accueil.php" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint);">&larr; Retour à l'accueil</a>
+            <a href="<?php echo BASE_URL; ?>index.php" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint);">&larr; Retour à l'index</a>
             
             <!-- Affichage de la catégorie -->
             <span class="card__badge" style="background:var(--ink); padding:0.3rem 0.6rem; margin-bottom: 0;">
