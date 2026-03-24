@@ -9,7 +9,7 @@ session_unset();
 session_destroy();
 
 // On redirige l'utilisateur vers la page d'accueil
-header("Location: accueil.php");
+header("Location: index.php");
 // On arrête l'exécution du reste du code avec exit par sécurité
 exit;
 ?>

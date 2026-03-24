@@ -5,7 +5,7 @@ require_once 'config.php';
 // Si l'utilisateur est déjà connecté, on n'a pas besoin de ce formulaire
 if (isset($_SESSION['utilisateur'])) {
     // On le redirige vers l'accueil
-    header('Location: accueil.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -14,7 +14,7 @@ $erreur = '';
 
 // On vérifie si le formulaire a été envoyé (si la méthode est POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     // On récupère les données envoyées et on les sécurise (htmlspecialchars)
     $login = htmlspecialchars($_POST['login']);
     $mot_de_passe = htmlspecialchars($_POST['mot_de_passe']);
@@ -22,67 +22,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 1. On vérifie si les champs sont bien remplis
     if (empty($login)) {
         $erreur = "Le nom d'utilisateur est requis.";
-    } elseif (empty($mot_de_passe)) {
+    }
+    elseif (empty($mot_de_passe)) {
         $erreur = "Le mot de passe est requis.";
-    } else {
+    }
+    else {
         // 2. Préparation de la requête pour chercher cet utilisateur dans la base de données
         $requete = $pdo->prepare("SELECT id, nom, prenom, login, mot_de_passe, role FROM utilisateurs WHERE login = :login");
         $requete->bindValue(':login', $login);
         $requete->execute();
-        
         // On récupère l'utilisateur trouvé
         $user = $requete->fetch();
 
         // 3. On vérifie si l'utilisateur existe ET si le mot de passe correspond au hash dans la BDD
         if ($user) {
             $motDePasseValide = password_verify($mot_de_passe, $user['mot_de_passe']);
-            
+
             if ($motDePasseValide) {
                 // Tout est bon, on régénère l'identifiant de la session (mesure de sécurité)
                 session_regenerate_id(true);
-    
+
                 // On enregistre les données de l'utilisateur dans la session
                 $_SESSION['utilisateur'] = [
-                    'id'     => $user['id'],
-                    'nom'    => $user['nom'],
+                    'id' => $user['id'],
+                    'nom' => $user['nom'],
                     'prenom' => $user['prenom'],
-                    'role'   => $user['role']
+                    'role' => $user['role']
                 ];
-                
+
                 // On redirige vers l'accueil
-                header('Location: accueil.php');
+                header('Location: index.php');
                 exit;
-            } else {
+            }
+            else {
                 $erreur = "Mot de passe incorrect.";
             }
-        } else {
+        }
+        else {
             $erreur = "Identifiant non reconnu.";
         }
     }
 }
 ?>
-<!-- Inclusion du haut de page et du menu -->
+
 <?php require_once 'entete.php'; ?>
 <?php require_once 'menu.php'; ?>
 
-<!-- Contenu de la page -->
+
 <main class="wrapper" style="max-width: 500px;">
     <div class="section-head">
         <h2>Connexion</h2>
     </div>
 
-    <?php 
-    // S'il y a une erreur, on l'affiche
-    if ($erreur !== '') { 
-    ?>
+    <?php
+if ($erreur !== '') {
+?>
         <div style="background:var(--accent); color:#fff; padding:10px; margin-bottom:20px; text-align:center;">
             <?php echo htmlspecialchars($erreur); ?>
         </div>
-    <?php 
-    } 
-    ?>
-
-    <!-- Formulaire de connexion -->
+    <?php
+}
+?>
     <form method="post" action="connexion.php" id="formConnexion" style="display:flex; flex-direction:column; gap:1.5rem;">
         
         <div style="display:flex; flex-direction:column; gap:.5rem;">

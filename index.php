@@ -258,9 +258,9 @@ function couleurCat($nom, $tableau_couleurs) {
 
         <?php
         // On construit l'URL de base (ex: accueil.php?categorie=2&)
-        $base_url = 'accueil.php?';
+        $base_url = 'index.php?';
         if ($categorie_filtre !== null) {
-            $base_url = 'accueil.php?categorie=' . $categorie_filtre . '&';
+            $base_url = 'index.php?categorie=' . $categorie_filtre . '&';
         }
 
         // On détermine si le bouton précédent doit être désactivé

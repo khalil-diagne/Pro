@@ -17,12 +17,12 @@ $users = $requete_utilisateurs->fetchAll();
 // 3. Gestion des messages (succès ou erreur en provenance des autres pages)
 $msg = "";
 if (isset($_GET['msg'])) {
-    $msg = $_GET['msg'];
+    $msg = htmlspecialchars($_GET['msg']);
 }
 
 $erreur = "";
 if (isset($_GET['err'])) {
-    $erreur = $_GET['err'];
+    $erreur = htmlspecialchars($_GET['err']);
 }
 ?>
 <!-- Inclusion de l'entête et du menu de navigation -->
